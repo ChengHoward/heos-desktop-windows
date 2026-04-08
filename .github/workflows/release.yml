@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+# 未列出的权限在 GHA 中为 none；Artifacts 需要显式声明 actions。
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Self-contained folder (ReadyToRun)
+          - rid: win-x64
+            suffix: win-x64
+            selfcontained: 'true'
+            singlefile: 'false'
+            r2r: 'true'
+          - rid: win-arm64
+            suffix: win-arm64
+            selfcontained: 'true'
+            singlefile: 'false'
+            r2r: 'true'
+          # Framework-dependent (requires .NET 8 Desktop Runtime on the PC)
+          - rid: win-x64
+            suffix: win-x64-fd
+            selfcontained: 'false'
+            singlefile: 'false'
+            r2r: 'false'
+          - rid: win-arm64
+            suffix: win-arm64-fd
+            selfcontained: 'false'
+            singlefile: 'false'
+            r2r: 'false'
+          # Self-contained single-file exe
+          - rid: win-x64
+            suffix: win-x64-single
+            selfcontained: 'true'
+            singlefile: 'true'
+            r2r: 'false'
+          - rid: win-arm64
+            suffix: win-arm64-single
+            selfcontained: 'true'
+            singlefile: 'true'
+            r2r: 'false'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Resolve version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $ver = $tag
+          if ($ver.StartsWith('v', [System.StringComparison]::OrdinalIgnoreCase)) {
+            $ver = $ver.Substring(1)
+          }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$ver"
+          Write-Host "Assembly/NuGet version: $ver (tag: $tag)"
+
+      - name: Publish
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          RID: ${{ matrix.rid }}
+          SELF_CONTAINED: ${{ matrix.selfcontained }}
+          SINGLE_FILE: ${{ matrix.singlefile }}
+          R2R: ${{ matrix.r2r }}
+        run: |
+          $out = "publish/out"
+          if (Test-Path $out) { Remove-Item $out -Recurse -Force }
+          $args = @(
+            'publish', 'src/HeosWpf/HeosWpf.csproj',
+            '-c', 'Release',
+            '-r', $env:RID,
+            '--self-contained', $env:SELF_CONTAINED,
+            '-p:Version=' + $env:VERSION,
+            '-o', $out
+          )
+          if ($env:R2R -eq 'true') { $args += '-p:PublishReadyToRun=true' }
+          if ($env:SINGLE_FILE -eq 'true') {
+            $args += '-p:PublishSingleFile=true'
+            $args += '-p:IncludeNativeLibrariesForSelfExtract=true'
+          }
+          dotnet @args
+
+      - name: Zip artifact
+        shell: pwsh
+        run: |
+          $zip = "HeosWpf-${{ github.ref_name }}-${{ matrix.suffix }}.zip"
+          if (Test-Path $zip) { Remove-Item $zip }
+          Compress-Archive -Path "publish/out/*" -DestinationPath $zip
+          Get-Item $zip | Format-List Name, Length
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-zip-${{ matrix.suffix }}
+          path: HeosWpf-${{ github.ref_name }}-${{ matrix.suffix }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Download all zips
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-zip-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          files: dist/*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

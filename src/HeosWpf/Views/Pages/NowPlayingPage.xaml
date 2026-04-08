@@ -1,0 +1,447 @@
+<Page
+    x:Class="HeosWpf.Views.Pages.NowPlayingPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="clr-namespace:FontAwesome.Sharp;assembly=FontAwesome.Sharp"
+    xmlns:local="clr-namespace:HeosWpf.Views.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="正在播放"
+    d:DataContext="{d:DesignInstance local:NowPlayingPage,
+                                     IsDesignTimeCreatable=False}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+    ScrollViewer.VerticalScrollBarVisibility="Disabled"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Page.Resources>
+
+    <Grid ClipToBounds="True">
+        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Rectangle.Fill>
+                <ImageBrush
+                    AlignmentX="Center"
+                    AlignmentY="Center"
+                    ImageSource="{Binding ViewModel.AlbumArtUrl, Mode=OneWay}"
+                    Stretch="UniformToFill" />
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <Grid Background="#B8000000" />
+
+        <Grid Margin="24,20,24,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 顶栏 -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <ui:TextBlock FontTypography="Title" Foreground="White" Text="正在播放" TextWrapping="Wrap">
+                        <ui:TextBlock.Effect>
+                            <DropShadowEffect
+                                BlurRadius="10"
+                                Opacity="0.85"
+                                ShadowDepth="0"
+                                Color="Black" />
+                        </ui:TextBlock.Effect>
+                    </ui:TextBlock>
+                    <TextBlock
+                        Margin="0,8,0,0"
+                        Foreground="#E6FFFFFF"
+                        Text="{Binding ViewModel.Subtitle, Mode=OneWay}"
+                        TextWrapping="Wrap">
+                        <TextBlock.Effect>
+                            <DropShadowEffect
+                                BlurRadius="8"
+                                Opacity="0.8"
+                                ShadowDepth="0"
+                                Color="Black" />
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </StackPanel>
+
+                <ui:Button
+                    Grid.Column="1"
+                    Width="42"
+                    Height="42"
+                    Appearance="Secondary"
+                    Command="{Binding ViewModel.OpenDeviceSettingsCommand}"
+                    ToolTip="设备设置">
+                    <fa:IconBlock Icon="Sliders" FontSize="16" />
+                </ui:Button>
+            </Grid>
+
+            <!-- 封面层上的标题与元信息 -->
+            <Viewbox
+                Grid.Row="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Margin="12,8,12,8"
+                Stretch="Uniform"
+                StretchDirection="Both">
+                <StackPanel Width="760">
+                    <TextBlock
+                        FontSize="34"
+                        FontWeight="SemiBold"
+                        Foreground="White"
+                        Text="{Binding ViewModel.Song, Mode=OneWay}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap">
+                        <TextBlock.Effect>
+                            <DropShadowEffect
+                                BlurRadius="14"
+                                Opacity="0.9"
+                                ShadowDepth="0"
+                                Color="Black" />
+                        </TextBlock.Effect>
+                    </TextBlock>
+                    <TextBlock
+                        Margin="0,12,0,0"
+                        FontSize="20"
+                        Foreground="#E6FFFFFF"
+                        Text="{Binding ViewModel.Artist, Mode=OneWay}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap">
+                        <TextBlock.Effect>
+                            <DropShadowEffect
+                                BlurRadius="10"
+                                Opacity="0.85"
+                                ShadowDepth="0"
+                                Color="Black" />
+                        </TextBlock.Effect>
+                    </TextBlock>
+                    <TextBlock
+                        Margin="0,8,0,0"
+                        FontSize="16"
+                        Foreground="#CCFFFFFF"
+                        Text="{Binding ViewModel.Album, Mode=OneWay}"
+                        TextAlignment="Center"
+                        TextWrapping="Wrap">
+                        <TextBlock.Effect>
+                            <DropShadowEffect
+                                BlurRadius="8"
+                                Opacity="0.8"
+                                ShadowDepth="0"
+                                Color="Black" />
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </StackPanel>
+            </Viewbox>
+
+            <!-- 底部控制：独立一行，始终在视口底部可见，不依赖页级滚动 -->
+            <Border
+                Grid.Row="2"
+                Panel.ZIndex="2"
+                HorizontalAlignment="Center"
+                MinWidth="300"
+                MaxWidth="620"
+                Margin="0,0,0,8"
+                ClipToBounds="True"
+                CornerRadius="14"
+                BorderBrush="#55FFFFFF"
+                BorderThickness="1"
+                SnapsToDevicePixels="True">
+                <!-- 必须显式 Auto 行：否则默认 * 行会让模糊 Image 纵向吃满布局，毛玻璃块顶满页面 -->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Image
+                        Grid.Row="0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        Height="{Binding ElementName=GlassPanelContent, Path=ActualHeight, Mode=OneWay}"
+                        RenderOptions.BitmapScalingMode="LowQuality"
+                        Stretch="UniformToFill"
+                        Source="{Binding ViewModel.AlbumArtUrl, Mode=OneWay}">
+                        <Image.Effect>
+                            <BlurEffect KernelType="Gaussian" Radius="24" RenderingBias="Quality" />
+                        </Image.Effect>
+                    </Image>
+                    <Border
+                        Grid.Row="0"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Top"
+                        Height="{Binding ElementName=GlassPanelContent, Path=ActualHeight, Mode=OneWay}"
+                        Background="#90101010" />
+                    <StackPanel
+                        x:Name="GlassPanelContent"
+                        Grid.Row="0"
+                        Margin="10,8"
+                        Panel.ZIndex="1">
+                        <ProgressBar
+                            Height="3"
+                            IsIndeterminate="True"
+                            Visibility="{Binding ViewModel.IsActionLoading, Converter={StaticResource BoolToVis}}" />
+                        <TextBlock
+                            Margin="0,4,0,0"
+                            Foreground="#D9FFFFFF"
+                            Text="{Binding ViewModel.LoadingText}"
+                            TextWrapping="Wrap"
+                            Visibility="{Binding ViewModel.IsActionLoading, Converter={StaticResource BoolToVis}}" />
+
+                        <!-- 传输：横向均分，随宽度伸缩 -->
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" MinWidth="44" />
+                                <ColumnDefinition Width="*" MinWidth="44" />
+                                <ColumnDefinition Width="*" MinWidth="52" />
+                                <ColumnDefinition Width="*" MinWidth="44" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:Button
+                                Grid.Column="0"
+                                Margin="0,0,4,0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                MinHeight="34"
+                                MaxHeight="42"
+                                MinWidth="44"
+                                MaxWidth="62"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Appearance="Secondary"
+                                Command="{Binding ViewModel.PrevTrackCommand}"
+                                ToolTip="上一首">
+                                <Viewbox MaxWidth="18" MaxHeight="18">
+                                    <fa:IconBlock Icon="BackwardStep" />
+                                </Viewbox>
+                            </ui:Button>
+                            <ui:Button
+                                Grid.Column="1"
+                                Margin="0,0,4,0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                MinHeight="36"
+                                MaxHeight="46"
+                                MinWidth="48"
+                                MaxWidth="66"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Appearance="Primary"
+                                Command="{Binding ViewModel.TogglePlayCommand}"
+                                ToolTip="播放 / 暂停">
+                                <Viewbox MaxWidth="20" MaxHeight="20">
+                                    <fa:IconBlock>
+                                        <fa:IconBlock.Style>
+                                            <Style TargetType="{x:Type fa:IconBlock}">
+                                                <Setter Property="Icon" Value="CirclePlay" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ViewModel.IsPlaying}" Value="True">
+                                                        <Setter Property="Icon" Value="CirclePause" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </fa:IconBlock.Style>
+                                    </fa:IconBlock>
+                                </Viewbox>
+                            </ui:Button>
+                            <ui:Button
+                                Grid.Column="2"
+                                Margin="0,0,4,0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                MinHeight="34"
+                                MaxHeight="42"
+                                MinWidth="44"
+                                MaxWidth="62"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Appearance="Secondary"
+                                Command="{Binding ViewModel.NextTrackCommand}"
+                                ToolTip="下一首">
+                                <Viewbox MaxWidth="18" MaxHeight="18">
+                                    <fa:IconBlock Icon="ForwardStep" />
+                                </Viewbox>
+                            </ui:Button>
+                            <ui:Button
+                                Grid.Column="3"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                MinHeight="34"
+                                MaxHeight="42"
+                                MinWidth="44"
+                                MaxWidth="62"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Appearance="Secondary"
+                                Command="{Binding ViewModel.PullNowPlayingCommand}"
+                                ToolTip="刷新播放信息">
+                                <Viewbox MaxWidth="18" MaxHeight="18">
+                                    <fa:IconBlock Icon="ArrowsRotate" />
+                                </Viewbox>
+                            </ui:Button>
+                            <ui:Button
+                                Grid.Column="4"
+                                Margin="6,0,0,0"
+                                Padding="10,4"
+                                MinHeight="34"
+                                MaxHeight="42"
+                                MinWidth="76"
+                                Appearance="Secondary"
+                                Command="{Binding ViewModel.SwitchToAuxInCommand}"
+                                Content="AUX IN"
+                                ToolTip="当前已是 AUX IN 时会自动禁用" />
+                        </Grid>
+
+                        <!-- 音量：横向 -->
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" MinWidth="80" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:Button
+                                Grid.Column="0"
+                                Margin="0,0,8,0"
+                                HorizontalAlignment="Center"
+                                MinWidth="34"
+                                MaxWidth="42"
+                                MinHeight="32"
+                                MaxHeight="38"
+                                Appearance="Secondary"
+                                Command="{Binding ViewModel.VolumeDownCommand}"
+                                ToolTip="降低音量">
+                                <Viewbox MaxWidth="14" MaxHeight="14">
+                                    <fa:IconBlock Icon="VolumeLow" />
+                                </Viewbox>
+                            </ui:Button>
+                            <Slider
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                IsEnabled="{Binding ViewModel.CanControl}"
+                                Maximum="100"
+                                Minimum="0"
+                                Value="{Binding ViewModel.Volume, Mode=TwoWay}" />
+                            <ui:Button
+                                Grid.Column="2"
+                                Margin="8,0,8,0"
+                                MinWidth="34"
+                                MaxWidth="42"
+                                MinHeight="32"
+                                MaxHeight="38"
+                                Appearance="Secondary"
+                                Command="{Binding ViewModel.VolumeUpCommand}"
+                                ToolTip="提高音量">
+                                <Viewbox MaxWidth="14" MaxHeight="14">
+                                    <fa:IconBlock Icon="VolumeHigh" />
+                                </Viewbox>
+                            </ui:Button>
+                            <TextBlock
+                                Grid.Column="3"
+                                MinWidth="44"
+                                VerticalAlignment="Center"
+                                Foreground="#E6FFFFFF"
+                                Text="{Binding ViewModel.Volume, StringFormat={}{0}%}" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid
+            Panel.ZIndex="15"
+            Background="#B8000000"
+            Visibility="{Binding ViewModel.IsPageLoading, Converter={StaticResource BoolToVis}}">
+            <ui:Card
+                Width="300"
+                Padding="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <StackPanel>
+                    <ui:TextBlock FontTypography="Subtitle" Text="加载中" />
+                    <ui:TextBlock
+                        Margin="0,8,0,12"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding ViewModel.LoadingText}" />
+                    <ProgressBar Height="4" IsIndeterminate="True" />
+                </StackPanel>
+            </ui:Card>
+        </Grid>
+
+        <Grid
+            Panel.ZIndex="10"
+            Background="#B8000000"
+            Visibility="{Binding ViewModel.IsDeviceSettingsOpen, Converter={StaticResource BoolToVis}}">
+            <ui:Card
+                MaxWidth="520"
+                Margin="24"
+                Padding="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{DynamicResource ControlFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <ui:TextBlock Grid.Row="0" FontTypography="Subtitle" Text="设备设置" />
+
+                    <StackPanel Grid.Row="1" Margin="0,14,0,0">
+                        <ui:TextBlock Text="设备型号" />
+                        <ui:TextBlock
+                            Margin="0,6,0,0"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding ViewModel.DeviceModel}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Margin="0,16,0,0">
+                        <ui:TextBlock Text="设备名称" />
+                        <ui:TextBlock
+                            Margin="0,6,0,0"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding ViewModel.DeviceNameDisplay, Mode=OneWay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="3" Margin="0,16,0,0">
+                        <ui:TextBlock Text="网络" />
+                        <ui:TextBlock
+                            Margin="0,6,0,0"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding ViewModel.DeviceNetwork}" />
+                    </StackPanel>
+
+                    <StackPanel
+                        Grid.Row="4"
+                        Margin="0,20,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <ui:Button
+                            Margin="0,0,8,0"
+                            Appearance="Secondary"
+                            Command="{Binding ViewModel.CloseDeviceSettingsCommand}"
+                            Content="关闭"
+                            MinWidth="100" />
+                        <ui:Button
+                            Appearance="Danger"
+                            Command="{Binding ViewModel.RestartDeviceCommand}"
+                            Content="重新启动"
+                            MinWidth="110" />
+                    </StackPanel>
+                </Grid>
+            </ui:Card>
+        </Grid>
+    </Grid>
+</Page>

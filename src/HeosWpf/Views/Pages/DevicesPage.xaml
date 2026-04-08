@@ -1,0 +1,200 @@
+<Page
+    x:Class="HeosWpf.Views.Pages.DevicesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:HeosWpf.Views.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="我的设备"
+    d:DataContext="{d:DesignInstance local:DevicesPage,
+                                     IsDesignTimeCreatable=False}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+    ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <Style TargetType="{x:Type ListView}">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorTertiaryBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style TargetType="{x:Type ListViewItem}">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <ScrollViewer Padding="0,24,0,24" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+                <ui:TextBlock FontTypography="Title" Text="我的设备" TextWrapping="Wrap" />
+                <ui:TextBlock
+                    Margin="0,12,0,0"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                    Text="{Binding ViewModel.Subtitle, Mode=OneWay}"
+                    TextWrapping="Wrap" />
+                <ui:Card Margin="0,20,0,0" Padding="20">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:TextBlock
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                FontTypography="Subtitle"
+                                Text="已添加设备" />
+                            <ui:Button
+                                Grid.Column="1"
+                                Appearance="Primary"
+                                Command="{Binding ViewModel.OpenAddDeviceDialogCommand}"
+                                Content="添加新设备"
+                                MinWidth="140" />
+                        </Grid>
+                        <ui:TextBlock
+                            Margin="0,0,0,12"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="选中一项将尝试连接；侧栏快捷方式会进入正在播放。"
+                            TextWrapping="Wrap" />
+                        <ListView
+                            MinHeight="220"
+                            MaxHeight="360"
+                            ItemsSource="{Binding ViewModel.SavedDevices}"
+                            SelectedItem="{Binding ViewModel.SelectedSavedDevice, Mode=TwoWay}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,4">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Text="{Binding Host}" />
+                                        <TextBlock
+                                            Margin="0,4,0,0"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                                            Text="当前"
+                                            Visibility="{Binding IsCurrent, Converter={StaticResource BoolToVis}}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                            <ui:Button
+                                Margin="0,0,8,0"
+                                Appearance="Secondary"
+                                Command="{Binding ViewModel.RemoveSavedDeviceCommand}"
+                                Content="删除所选"
+                                MinWidth="120" />
+                            <ui:Button
+                                Command="{Binding ViewModel.DisconnectCommand}"
+                                Content="断开连接"
+                                MinWidth="120" />
+                        </StackPanel>
+                        <Separator Margin="0,20,0,12" />
+                        <ui:TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding ViewModel.ConnectionStatusText, Mode=OneWay}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </ui:Card>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- 添加新设备模态层（不透明遮罩，避免暗色下透出背后内容） -->
+        <Grid
+            Panel.ZIndex="10"
+            Background="{DynamicResource ApplicationBackgroundBrush}"
+            Visibility="{Binding ViewModel.IsAddDeviceDialogOpen, Converter={StaticResource BoolToVis}}">
+            <ui:Card
+                MaxWidth="520"
+                MaxHeight="560"
+                Margin="24"
+                Padding="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{DynamicResource ControlFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ui:TextBlock
+                        Grid.Row="0"
+                        FontTypography="Subtitle"
+                        Text="添加新设备" />
+                    <ui:TextBlock
+                        Grid.Row="1"
+                        Margin="0,8,0,12"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="打开时将自动扫描局域网。也可在下方输入 IPv4 后点击「添加」。"
+                        TextWrapping="Wrap" />
+                    <StackPanel Grid.Row="2">
+                        <ProgressBar Height="3" IsIndeterminate="{Binding ViewModel.DialogIsScanning, Mode=OneWay}" />
+                        <TextBlock
+                            Margin="0,8,0,8"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                            Text="{Binding ViewModel.DialogScanSummary, Mode=OneWay}" />
+                        <ListView
+                            MaxHeight="200"
+                            ItemsSource="{Binding ViewModel.DialogDiscoveredDevices}"
+                            SelectedItem="{Binding ViewModel.DialogSelectedDiscovery, Mode=TwoWay}">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,4">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding DisplayName}" />
+                                        <TextBlock
+                                            FontSize="12"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                            Text="{Binding Detail}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <ui:Button
+                            Margin="0,12,0,0"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ViewModel.DialogScanCommand}"
+                            Content="重新扫描"
+                            MinWidth="120" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Margin="0,16,0,0">
+                        <ui:TextBlock Text="手动添加（IPv4）" />
+                        <ui:TextBox
+                            Margin="0,6,0,0"
+                            PlaceholderText="例如 192.168.1.100"
+                            Text="{Binding ViewModel.DialogManualIp, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel
+                        Grid.Row="4"
+                        Margin="0,20,0,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                        <ui:Button
+                            Margin="0,0,8,0"
+                            Appearance="Secondary"
+                            Command="{Binding ViewModel.CloseAddDeviceDialogCommand}"
+                            Content="取消"
+                            MinWidth="100" />
+                        <ui:Button
+                            Appearance="Primary"
+                            Command="{Binding ViewModel.ConfirmAddFromDialogCommand}"
+                            Content="添加"
+                            MinWidth="100" />
+                    </StackPanel>
+                </Grid>
+            </ui:Card>
+        </Grid>
+    </Grid>
+</Page>
