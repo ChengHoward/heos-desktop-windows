@@ -69,26 +69,30 @@ jobs:
           if ($ver.StartsWith('v', [System.StringComparison]::OrdinalIgnoreCase)) {
             $ver = $ver.Substring(1)
           }
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "version=$ver"
+          # UTF-8 无 BOM，避免 GITHUB_OUTPUT 首行解析异常
+          $utf8 = [System.Text.UTF8Encoding]::new($false)
+          [System.IO.File]::AppendAllText($env:GITHUB_OUTPUT, "version=$ver`n", $utf8)
           Write-Host "Assembly/NuGet version: $ver (tag: $tag)"
 
       - name: Publish
         shell: pwsh
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-          RID: ${{ matrix.rid }}
-          SELF_CONTAINED: ${{ matrix.selfcontained }}
-          SINGLE_FILE: ${{ matrix.singlefile }}
-          R2R: ${{ matrix.r2r }}
+          # 引号防止 0.1.0-dev 等被 YAML 当成数字/表达式，避免 -p:Version= 为空、后缀被当成多余 project
+          VERSION: '${{ steps.version.outputs.version }}'
+          RID: '${{ matrix.rid }}'
+          SELF_CONTAINED: '${{ matrix.selfcontained }}'
+          SINGLE_FILE: '${{ matrix.singlefile }}'
+          R2R: '${{ matrix.r2r }}'
         run: |
           $out = "publish/out"
           if (Test-Path $out) { Remove-Item $out -Recurse -Force }
+          if ([string]::IsNullOrWhiteSpace($env:VERSION)) { throw "VERSION is empty; check Resolve version from tag step." }
           $args = @(
             'publish', 'src/HeosWpf/HeosWpf.csproj',
             '-c', 'Release',
             '-r', $env:RID,
             '--self-contained', $env:SELF_CONTAINED,
-            '-p:Version=' + $env:VERSION,
+            "-p:Version=$($env:VERSION)",
             '-o', $out
           )
           if ($env:R2R -eq 'true') { $args += '-p:PublishReadyToRun=true' }
