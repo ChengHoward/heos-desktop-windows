@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="Assets/logo.webp" alt="HEOS Desktop" width="320" />
+<img src="Assets/182.png" alt="HEOS Desktop" width="320" />
 
 # HEOS Desktop（Windows）
 
